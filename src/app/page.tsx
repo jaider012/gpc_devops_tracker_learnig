@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect } from "react";
 import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Plus, CheckCircle, Circle, BookOpen, Sun, Moon } from "lucide-react";
+import { Plus, CheckCircle, Circle, BookOpen, Sun, Moon, Trash2 } from "lucide-react";
 
 import { useTheme } from "next-themes";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 interface Item {
   id: number;
   text: string;
@@ -304,6 +305,8 @@ const GCPDevOpsTracker: React.FC = () => {
     completed: 0,
     total: 0,
   });
+  const [showAlert, setShowAlert] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -336,9 +339,27 @@ const GCPDevOpsTracker: React.FC = () => {
     }));
   };
 
+  const deleteItem = (sectionKey: string, itemId: number): void => {
+    setSections((prev) => ({
+      ...prev,
+      [sectionKey]: {
+        ...prev[sectionKey],
+        items: prev[sectionKey].items.filter((item) => item.id !== itemId),
+      },
+    }));
+    setAlertMessage("Tarea eliminada exitosamente");
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
+  };
+
   const addNewItem = (e: React.FormEvent<HTMLFormElement>): void => {
     e.preventDefault();
-    if (!newItemText.trim() || !selectedSection) return;
+    if (!newItemText.trim() || !selectedSection) {
+      setAlertMessage("Por favor, selecciona una sección y escribe una tarea");
+      setShowAlert(true);
+      setTimeout(() => setShowAlert(false), 3000);
+      return;
+    }
 
     setSections((prev) => ({
       ...prev,
@@ -355,6 +376,9 @@ const GCPDevOpsTracker: React.FC = () => {
       },
     }));
     setNewItemText("");
+    setAlertMessage("Tarea agregada exitosamente");
+    setShowAlert(true);
+    setTimeout(() => setShowAlert(false), 3000);
   };
 
   const toggleTheme = () => {
@@ -364,6 +388,11 @@ const GCPDevOpsTracker: React.FC = () => {
   return (
     <div className="min-h-screen dark:bg-[#141414] bg-white transition-colors duration-300">
       <div className="max-w-4xl mx-auto p-4">
+        {showAlert && (
+          <Alert className="mb-4 bg-[#CBE71E] text-black">
+            <AlertDescription>{alertMessage}</AlertDescription>
+          </Alert>
+        )}
         <div className="flex justify-end mb-4">
           <Button
             variant="outline"
@@ -441,26 +470,38 @@ const GCPDevOpsTracker: React.FC = () => {
                   {section.items.map((item) => (
                     <div
                       key={item.id}
-                      className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-[#242424] rounded cursor-pointer transition-colors duration-200"
-                      onClick={() => toggleItem(key, item.id)}
+                      className="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-[#242424] rounded transition-colors duration-200"
                     >
-                      {item.completed ? (
-                        <CheckCircle className="text-[#CBE71E]" size={20} />
-                      ) : (
-                        <Circle
-                          className="text-gray-300 dark:text-gray-600"
-                          size={20}
-                        />
-                      )}
-                      <span
-                        className={`dark:text-gray-300 ${
-                          item.completed
-                            ? "line-through text-gray-500 dark:text-gray-600"
-                            : ""
-                        }`}
+                      <div
+                        className="flex-1 flex items-center gap-2 cursor-pointer"
+                        onClick={() => toggleItem(key, item.id)}
                       >
-                        {item.text}
-                      </span>
+                        {item.completed ? (
+                          <CheckCircle className="text-[#CBE71E]" size={20} />
+                        ) : (
+                          <Circle
+                            className="text-gray-300 dark:text-gray-600"
+                            size={20}
+                          />
+                        )}
+                        <span
+                          className={`dark:text-gray-300 ${
+                            item.completed
+                              ? "line-through text-gray-500 dark:text-gray-600"
+                              : ""
+                          }`}
+                        >
+                          {item.text}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-100/20"
+                        onClick={() => deleteItem(key, item.id)}
+                      >
+                        <Trash2 size={18} />
+                      </Button>
                     </div>
                   ))}
                 </div>
